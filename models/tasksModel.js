@@ -1,30 +1,19 @@
-const { Schema } = require('mongoose')
-const mongoose = require('mongoose')
+const { Schema, model } = require('mongoose')
 
-const tasksSchema = new Schema({
-    name: {
-        type: String
-    },
-    dueDate: {
-        type: Date,
-    },
-    deadlineDate: {
-        type: Date
-    },
+const taskSchema = new Schema({
+    name: { type: String },
+    dueDate: { type: Date }
+    , deadlineDate: { type: Date },
     parentProjects: {
         type: [String],
         default: []
     },
-    priority: {
-        type: String
-    },
+    priority: { type: String },
     status: {
         type: String,
         required: true
     },
-    assignee: {
-        type: [String]
-    },
+    assignee: { type: [String] },
     createdAt: {
         type: Date,
         default: Date.now(),
@@ -36,6 +25,5 @@ const tasksSchema = new Schema({
     }
 })
 
-const User = mongoose.model('User', usersSchema)
 
-module.exports = User
+module.exports = model('Tasks', taskSchema)
