@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const app = express()
 const port = 2346
 
+
 app.use(express.json())
 
 
@@ -11,6 +12,7 @@ app.use('/')
 
 // TESTING ROUTE
 app.get('/', (req, res) => {
+
     console.log('getting')
     res.send('done')
 })
