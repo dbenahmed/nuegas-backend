@@ -6,22 +6,27 @@ const Users = require('./models/usersModel')
 const app = express()
 const port = 2346
 
-
+mongoose.set('debug', true);
 app.use(express.json())
 
 // TESTING ROUTE
 app.use('/', (req, res) => {
-    const newP = Projects.create({
-        name: 'test',
-        createdBy: 'testuser'
+    const newP = new Projects ({
+        name: 'testName   ',
+        projectTasks: ['111', '222'],
+        members: ['newmember'],
+        description: ' test    ',
+        createdBy: 'testname'
     })
     console.log('getting')
-    res.send('done')
+    newP.changeName('newNaemhere')
+    res.send(newP)
 })
 
 app.listen(port, async () => {
     try {
         const uri = process.env.MONGODB_URI
+        if (!uri) { throw ('uri unvalid') }
         await mongoose.connect(uri)
         console.log('server connected')
     } catch (e) {

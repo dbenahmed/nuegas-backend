@@ -13,11 +13,12 @@ function setProjectName(v) {
         return `Task-${taskNumber}`
     }
 }
-function setCreatorAsProjectMember() {
-    return this.createdBy
+
+function arrayContainUndefined(v) {
+    if (!Array.isArray(v)) { return false }
+    const containUndefined = v.findIndex((v) => v === undefined)
+    if (containUndefined === -1) { return false } else { return true }
 }
-
-
 // Project Schema
 const projectSchema = new Schema({
     name: {
@@ -31,13 +32,10 @@ const projectSchema = new Schema({
     createdAt: { type: Date, immutable: true, default: Date.now },
     projectTasks: { type: [String], default: [] },
     members: {
-        type: [String], required: true, set: setCreatorAsProjectMember,
+        type: [String],
         validate: [{
-            validator: (v) => { return arrayNotEmpty(v) },
-            message: 'Project members are set to empty ( impossible please ad one user to the project '
-        }, {
-            validator: (v) => { return !stringIsUndefined(v) },
-            message: 'User you want to add is undefined'
+            validator: (v) => !arrayContainUndefined(v),
+            message: `the members array contains undefined values`
         }]
     },
     description: {
