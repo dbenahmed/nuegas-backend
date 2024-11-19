@@ -10,9 +10,8 @@ const taskSchema = new Schema({
     },
     dueDate: { type: Date },
     deadlineDate: { type: Date },
-    parentProjects: {
-        type: [Types.ObjectId],
-        default: [],
+    parentProject: {
+        type: String, // ! todo change this to object id
         required: true,
     },
     priority: {
@@ -37,7 +36,7 @@ const taskSchema = new Schema({
             },
         },
     },
-    assignee: { type: [Types.ObjectId] },
+    assignees: { type: [Types.ObjectId] },
     createdAt: {
         type: Date,
         default: Date.now(),
@@ -47,6 +46,44 @@ const taskSchema = new Schema({
         type: Date,
         default: Date.now(),
     },
+}, {
+    methods: {
+        updateName(newName) {
+            this.name = newName
+        },
+        updateDuedate(newDate) {
+            this.dueDate = newDate
+        },
+        updateDeadlineDate(newD) {
+            this.deadlineDate = newD
+            return { success: true }
+        }, updateParentProject(projId) {
+            const toObjId = mongoose.Types.ObjectId(projId)
+            this.parentProject = toObjId
+            return { success: true }
+        }, updatePriority(newP) {
+            this.priority = newP
+            return { success: true }
+        }, updateStatus(newS) {
+            this.status = newS
+            return { success: true }
+        }, addAssignee(newAssigneeId) {
+            const toObjId = mongoose.Types.objectId(newAssigneeId)
+            const ind = this.assignees.findIndex(v => v === toObjId)
+            if (ind !== -1) {
+                return { success: false, message: 'assignee already exists' }
+            }
+            this.assignees.push(toObjId)
+            return { success: true }
+        }, removeAssignee(assigneeId) {
+            const ind = this.assignees.findIndex(v => v === assigneeId)
+            if (ind === -1) { return { success: false, message: 'assignee does not exist' } }
+            this.assignees.splice(ind, 1)
+            return { success: true }
+        }, updateUpdatedAt(newD) {
+            this.updatedAt = newD
+        }
+    }
 });
 
 module.exports = model("Tasks", taskSchema);
