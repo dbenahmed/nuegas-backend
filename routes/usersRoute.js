@@ -25,10 +25,10 @@ router.route('/login').post(userLogin)
 router.route('/:userId').delete(removeUser)
 
 // UPDATE USER NAME/DISPLAY NAME/EMAIL/...
-router.route('/:userId/:type').patch(updateUserData)
+router.route('/update').patch(updateUserData)
 
 // DELETE PROFILE PICTURE
-router.route('/:userId/profile-picture').delete(removeProfilePicture)
+router.route('/profile-picture/remove').delete(removeProfilePicture)
 
 // GET USER DATA
 router.route('/:userId').get(getUserData)

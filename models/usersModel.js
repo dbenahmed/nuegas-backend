@@ -37,17 +37,19 @@ const userSchema = new Schema({
                 message: 'successfully username updated'
             }
         },
-        updatePasswordHash(newPassword) {
+        async updatePasswordHash(newPassword) {
             // check the format of the given password if it is acceptable
-            const reg = /^(?=.*[a-z])(?=.*[A-Z])[A-Za-z]{8,}$/
-            const testReg = new RegExp(reg)
-            const validFormat = testReg.test(newPassword)
-            if (!validFormat) { return { success: false, message: 'password has unvalid format' } }
-            const passwordHash = bcrypt.hashSync((newPassword, 10))
+            // todo check the format of the password todo
+            //const reg = /^(?!.*[\w\s@#$%^&*()-+=_]).+$/
+            //const testReg = new RegExp(reg)
+            //     const validFormat = testReg.test(newPassword)
+            //   if (!validFormat) { return { success: false, message: 'password has unvalid format' } }
+            const passwordHash = bcrypt.hashSync(newPassword, 10)
+            console.log('pashash', passwordHash)
             this.passwordHash = passwordHash
             return ({
                 success: true,
-                message: 'password updated successfully'
+                message: 'password hash updated successfully'
             })
         },
         updateDisplayName(newDisplayName) {
@@ -55,21 +57,17 @@ const userSchema = new Schema({
             const regex = new RegExp(reg)
             const validFormat = regex.test(newDisplayName)
             if (!validFormat) { return ({ success: false, message: 'new usename has invalid format' }) }
-            this.username = newDisplayName
+            this.displayName = newDisplayName
             return {
                 success: true,
-                message: 'username updates successfully'
+                message: 'display name updates successfully'
             }
         },
         updateEmail(newEmail) {
-            const reg = /^[a-zA-Z0-9]+$/
-            const regex = new RegExp(reg)
-            const validFormat = regex.test(newUsername)
-            if (!validFormat) { return ({ success: false, message: 'new usename has invalid format' }) }
-            this.username = newUsername
+            this.email = newEmail
             return {
                 success: true,
-                message: 'username updates successfully'
+                message: 'email updates successfully'
             }
         },
         updateProfilePicture(newP) {

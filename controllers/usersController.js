@@ -1,4 +1,7 @@
 
+const { sendResponse } = require('./functions/sendResponse')
+const Users = require('../models/usersModel')
+
 const registerNewUser = async (req, res) => {
     try {
         // CREATION OF THE USER
@@ -21,11 +24,12 @@ const registerNewUser = async (req, res) => {
             displayName: username,
             email: undefined,
         })
+        console.log(foundUser)
         res.json({
             success: true,
             message: 'User created Successfully'
         })
-    } catch (e) { res.status(404).json({ success: false, message: e }) }
+    } catch (e) { sendResponse(false, e, 404, undefined, res) }
 
 }
 
@@ -58,6 +62,7 @@ const userLogin = async (req, res) => {
             userId: foundUser._id.toString(),
         }
         const generatedJwt = jwt.sign(payload, 'testkey')
+        console.log(foundUser)
         res.json({
             success: true,
             message: 'User Authenticated',
@@ -67,10 +72,7 @@ const userLogin = async (req, res) => {
         }).status(202)
     }
     catch (e) {
-        res.status(404).json({
-            success: false,
-            message: e.message
-        })
+        sendResponse(false, e, 404, undefined, res)
     }
 }
 
@@ -80,62 +82,108 @@ const removeUser = async (req, res) => {
         const {
             userId,
         } = req.body
-        const foundUser = Users.findById(userId)
+        const foundUser = await Users.findById(userId)
         if (!foundUser) { throw ('User not found') }
         foundUser.archive = true
+        console.log(foundUser)
         res.json({
             success: true,
             message: 'User removed successfuly'
         }).status(202)
     } catch (e) {
         console.log(e)
-        res.json({
-            success: false,
-            response: e
-        }).status(404)
+        sendResponse(false, e, 404, undefined, res)
     }
 }
 
 const updateUserData = async (req, res) => {
-    // The available possible type of data user would change
-    const typeEnum = ['email', 'password', 'username', 'display-name', 'profile-picture']
-    // gathering data from the user
-    const {
-        userId,
-        type,
-        newUsername,
-        newEmail,
-        newPassword,
-        profilePicture,
-        displayName,
-    } = req.body
-    // verifying if the type of data user wants to change is in the enum
-    const typeIsInEnum = typeEnum.includes(type)
-    if (!typeIsInEnum) { throw (`${type} is invalid item to change`) }
-    const foundUser =  Users.findById(userId)
-    if (!foundUser) {throw('User not found')}
-    switch (type) {
-        case 'email':
-             foundUser.
-            break;
-        case 'password':
-            break;
-        case 'username':
-            break;
-        case 'profile-picture':
-            break;
-        case 'display-name':
-            break;
-    }
+    try {
+        // The available possible type of data user would change
+        const typeEnum = ['email', 'password', 'username', 'display-name', 'profile-picture']
+        // gathering data from the user
+        const {
+            userId,
+            type,
+            username,
+            email,
+            password,
+            profilePicture,
+            displayName,
+        } = req.body
+        // verifying if the type of data user wants to change is in the enum
+        const typeIsInEnum = typeEnum.includes(type)
+        if (!typeIsInEnum) { throw (`${type} is invalid item to change`) }
+        const foundUser = await Users.findById(userId)
+        if (!foundUser) { throw ('User not found') }
+        switch (type) {
+            case 'email':
+                const updatedEmail = foundUser.updateEmail(email)
+                if (!updatedEmail.success) { throw (updatedEmail.message) }
+                console.log(foundUser)
+                sendResponse(true, 'email changed successfully', 202, undefined, res)
+                break;
+            case 'password':
+                const updatedPassword = await foundUser.updatePasswordHash(password)
+                if (!updatedPassword.success) { throw (updatedPassword.message) }
+                console.log(foundUser)
+                sendResponse(true, 'password changed successfully', 202, undefined, res)
+                break;
+            case 'username':
+                const updatedUsername = foundUser.updateUsername(username)
+                if (!updatedUsername.success) { throw (updatedUsername.message) }
+                console.log(foundUser)
+                sendResponse(true, 'Username changed successfully', 202, undefined, res)
+
+                break;
+            case 'profile-picture':
+                const updatedProfilePicture = foundUser.updateProfilePicture(profilePicture)
+                if (!updatedProfilePicture.success) { throw (updatedProfilePicture.message) }
+                console.log(foundUser)
+                sendResponse(true, 'Profile picture changed successfully', 202, undefined, res)
+
+                break;
+            case 'display-name':
+                const updatedDisplayName = foundUser.updateDisplayName(displayName)
+                if (!updatedDisplayName.success) { throw (updatedDisplayName.message) }
+                console.log(foundUser)
+                sendResponse(true, 'display name changed successfully', 202, undefined, res)
+                break;
+        }
+    } catch (e) { sendResponse(false, e, 404, undefined, res) }
 }
 
 
 const getUserData = async (req, res) => {
-
+    try {
+        const {
+            userId
+        } = req.params
+        console.log('userId', userId)
+        const foundUser = await Users.findById(userId)
+        if (!foundUser) { throw ('User not found') }
+        console.log(foundUser)
+        const {
+            username,
+            email,
+            displayName
+        } = foundUser
+        if ((username || email) && displayName) { sendResponse(true, 'User data gottent successfully', 202, { username, email, displayName }, res) }
+        else { throw (`DATA INVALID {  username ${username} email ${email} display name ${displayName}`) }
+    } catch (e) { console.log(e); sendResponse(false, e, 404, undefined, res) }
 }
 
-const removeProfilePicture = async () => {
-
+const removeProfilePicture = async (req, res) => {
+    try {
+        const {
+            userId
+        } = req.body
+        const foundUser = await Users.findById(userId)
+        if (!foundUser) { throw ('User not found') }
+        const removedPP = foundUser.updateProfilePicture(undefined)
+        if (!removedPP.success) { throw ('profile picture not removed error') }
+        console.log(foundUser)
+        sendResponse(true, 'Profile Picture removed successfully', 202, undefined, res)
+    } catch (e) { sendResponse(false, e, 404, undefined, res) }
 }
 
 module.exports = {
