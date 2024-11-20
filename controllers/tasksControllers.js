@@ -1,36 +1,20 @@
-const createTask = async (req, res) => {
+const getAllTasks = async (req, res) => {
 
 }
 
-const updateTaskName = async (req, res) => {
+const getSingleTask = async (req, res) => {
 
 }
 
-const updateDueDate = async (req, res) => {
+const createNewTask = async (req, res) => {
 
 }
 
-const updatePriority = async (req, res) => {
+const updateTask = async (req, res) => {
 
 }
 
-const updateStatus = async (req, res) => {
-
-}
-
-const updateParentProjects = async (req, res) => {
-
-}
-
-const updateDeadlineDate = async (req, res) => {
-
-}
-
-const updateAssignees = async (req, res) => {
-
-}
-
-const removeTask = async (req, res) => {
+const deleteTask = async (req, res) => {
 
 }
 
@@ -48,4 +32,16 @@ const getTodayTasks = async (req, res) => {
 
 const getAllProjectTasks = async (req, res) => {
 
+}
+
+module.exports = {
+    getAllTasks,
+    getSingleTask,
+    createNewTask,
+    updateTask,
+    deleteTask,
+    getRunningTasks,
+    getUpcomingTasks,
+    getTodayTasks,
+    getAllProjectTasks,
 }

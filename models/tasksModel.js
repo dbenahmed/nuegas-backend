@@ -11,7 +11,7 @@ const taskSchema = new Schema({
     dueDate: { type: Date },
     deadlineDate: { type: Date },
     parentProject: {
-        type: String, // ! todo change this to object id
+        type: Types.ObjectId,
         required: true,
     },
     priority: {
