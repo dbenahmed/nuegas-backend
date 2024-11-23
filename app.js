@@ -27,7 +27,26 @@ app.use('/users', usersRouter)
 app.use('/tasks', tasksRouter)
 // TESTING ROUTE
 app.use("/", async (req, res) => {
-
+    /* Projects.create({
+        name: 'testPRoject22',
+        projectTasks: [],
+        members: [],
+        createdBy: '673b7c955df7e17c17660bd4',
+    }) */
+    /* Tasks.create({
+        name: 'test',
+        dueDate: new Date(2024, 11, 24),
+        createdBy: new mongoose.Types.ObjectId(),
+        assignees: [],
+    }) */
+    /* Tasks.create({
+        name: 'testTask222',
+        dueDate: Date.now(),
+        priority: 'urgent',
+        status: 'doing',
+        assignees: ['673b7c955df7e17c17660bd4']
+    }) */
+    const t = Tasks.findById('6740e2b3778db208b85f567e')
     res.send('done')
 });
 

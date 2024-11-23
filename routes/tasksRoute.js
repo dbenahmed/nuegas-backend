@@ -14,21 +14,21 @@ const {
 
 const router = mongoose.Router()
 
-router.route('/all').get(getAllProjectTasks)
+router.route('/project/:projectId/tasks').get(getAllProjectTasks)
 
 router.route('/:id').get(getSingleTask)
 
 router.route('/create').post(createNewTask)
 
-router.route('/:id/update').patch(updateTask)
+router.route('/update').patch(updateTask)
 
-router.route('/:id/delete').delete(deleteTask)
+router.route('/delete').delete(deleteTask)
 
-router.route('/:id/running').delete(getRunningTasks)
+router.route('/:id/running').get(getRunningTasks)
 
-router.route('/:id/upcoming').delete(getUpcomingTasks)
+router.route('/:userId/upcoming/:type').get(getUpcomingTasks)
 
-router.route('/:id/today').delete(getTodayTasks)
+router.route('/:id/today').get(getTodayTasks)
 
 
 

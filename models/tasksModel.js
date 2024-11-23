@@ -6,13 +6,13 @@ const taskSchema = new Schema({
         required: true,
         trim: true,
         maxLength: 16,
-        match: /^[A-Za-z0-9 ]+$/
+        match: /^[A-Za-z0-9 ]+$/,
+        minLength: 1,
     },
     dueDate: { type: Date },
     deadlineDate: { type: Date },
     parentProject: {
-        type: Types.ObjectId,
-        required: true,
+        type: Types.ObjectId, default: undefined
     },
     priority: {
         type: String,
@@ -37,6 +37,10 @@ const taskSchema = new Schema({
         },
     },
     assignees: { type: [Types.ObjectId] },
+    createdBy: {
+        type: Types.ObjectId,
+        required: true
+    },
     createdAt: {
         type: Date,
         default: Date.now(),
@@ -46,6 +50,11 @@ const taskSchema = new Schema({
         type: Date,
         default: Date.now(),
     },
+    archive: {
+        type: Boolean,
+        default: false,
+        required: true
+    }
 }, {
     methods: {
         updateName(newName) {
