@@ -2,14 +2,17 @@ const express = require('express')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
-const Users = require('../models/usersModel')
-const { registerNewUser,
+const {
+    registerNewUser,
     userLogin,
     removeUser,
     updateUserData,
     getUserData,
     removeProfilePicture,
+    userLogout,
 } = require('../controllers/usersController')
+const Users = require('../models/usersModel')
+const {verifyJWT} = require('../middleware/authMiddleware.js')
 
 const router = express.Router()
 
@@ -17,9 +20,11 @@ const router = express.Router()
 // CREATE A NEW USER
 router.route('/register').post(registerNewUser)
 
-
 // USER LOGIN
 router.route('/login').post(userLogin)
+
+// USER LOGOUT
+router.route('/logout').post(verifyJWT, userLogout)
 
 // USER DELETE
 router.route('/:userId').delete(removeUser)

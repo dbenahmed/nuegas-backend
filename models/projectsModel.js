@@ -1,7 +1,7 @@
 const { Schema, model, Types } = require("mongoose");
-const { stringIsUndefined: stringIsUndefined, stringDoesNotContainSpecialCharacters: stringDoesNotContainSpecialCharacters } = require('../validators/stringValidators')
-const { arrayNotEmpty: arrayNotEmpty } = require('../validators/arrayValidators')
-const { dateIsADate: dateIsADate } = require('../validators/dateValidators')
+const { stringIsUndefined: stringIsUndefined, stringDoesNotContainSpecialCharacters: stringDoesNotContainSpecialCharacters } = require('../utils/stringValidators')
+const { arrayNotEmpty: arrayNotEmpty } = require('../utils/arrayValidators')
+const { dateIsADate: dateIsADate } = require('../utils/dateValidators')
 
 // SSSetter functions
 function setProjectName(v) {

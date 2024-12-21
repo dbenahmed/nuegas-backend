@@ -2,6 +2,7 @@
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
 
 // MONGOOSE SCHEMA
 const Projects = require("./models/projectsModel");
@@ -9,20 +10,24 @@ const Users = require("./models/usersModel");
 const Comments = require("./models/commentsModel");
 const Tasks = require('./models/tasksModel')
 
-// ROUTES
+
+const app = express();
+const port = 8000;
+
+
+// IMPORTING ROUTES
 const usersRouter = require('./routes/usersRoute')
 const tasksRouter = require('./routes/tasksRoute')
 const projectsRouter = require('./routes/projectsRoute')
 
-const app = express();
-const port = 9990;
-
-
-
+// MONGOOSE DEBUGGING
 mongoose.set("debug", true);
+
+// MIDDLEWARES
 app.use(express.json());
+app.use(cookieParser())
 
-
+// USING ROUTES
 app.use('/users', usersRouter)
 app.use('/tasks', tasksRouter)
 app.use('/projects', projectsRouter)
@@ -51,6 +56,8 @@ app.use("/", async (req, res) => {
     res.send('done')
 });
 
+
+// SERVER LISTENING
 app.listen(port, async () => {
     try {
         const uri = process.env.MONGODB_URI;
