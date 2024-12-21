@@ -20,12 +20,16 @@ const usersRouter = require('./routes/usersRoute')
 const tasksRouter = require('./routes/tasksRoute')
 const projectsRouter = require('./routes/projectsRoute')
 
+// IMPORTING MIDDLEWARES
+const {verifyJWT} = require("./middleware/authMiddleware");
+
 // MONGOOSE DEBUGGING
 mongoose.set("debug", true);
 
 // MIDDLEWARES
 app.use(express.json());
 app.use(cookieParser())
+app.use(verifyJWT)
 
 // USING ROUTES
 app.use('/users', usersRouter)

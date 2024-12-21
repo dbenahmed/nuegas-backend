@@ -2,7 +2,8 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const {sendResponse} = require('./functions/sendResponse')
 const Users = require('../models/usersModel')
-
+const ApiResponse = require("../utils/ApiResponse");
+ApiError = require('../utils/ApiError')
 
 const generateAccessTokenAndRefreshToken = async function (user) {
     try {
@@ -27,35 +28,33 @@ const registerNewUser = async (req, res) => {
 
         // verifying if some field is empty
         if ([displayName, password, email, username].some((field) => field?.trim() === "")) {
-            throw ('All fields are required')
+            throw new ApiError(400, 'All fields are required', {password, username, email, displayName})
         }
 
         // verifying the username given format
         const reg = new RegExp(/^[a-zA-Z0-9-]+$/)
         const match = reg.test(username)
         if (!match) {
-            throw ('Username does not match required format only letters and number can be used')
+            throw new ApiError(400, 'Username does not match required format only letters and number can be used', {username})
         }
         // verify if the user already exists using username , email
         const userFound = await Users.findOne({username})
         if (userFound) {
-            throw ('User already exists before')
+            throw new ApiError(400, 'User already exists')
         }
         // if not existed we make it 
-        const hashRounds = 10
         const user = await Users.create({
             username, passwordHash: password, displayName: displayName, email: email,
         })
 
         const createdUser = await Users.findById(user._id).select('-passwordHash')
         if (!createdUser) {
-            throw ("user not created")
+            throw new ApiError(500, 'User not created', {createdUser})
         }
-        res.json({
-            success: true, message: 'User created Successfully', data: createdUser
-        })
+        const apiResponse = new ApiResponse(202, 'User created successfully', {createdUser}, true)
+        res.json(apiResponse).statusCode(apiResponse.successCode)
     } catch (e) {
-        sendResponse(false, e, 404, undefined, res)
+        res.json(e).statusCode(e.statusCode)
     }
 
 }
@@ -69,7 +68,7 @@ const userLogin = async (req, res) => {
 
         // verify if given email and username are valid
         if (!username && !email) {
-            throw ("Email or username unvalid")
+            throw new ApiError(400, 'Email or username unvalid', {username, email})
         }
 
         // find the user
@@ -78,13 +77,13 @@ const userLogin = async (req, res) => {
         })
 
         if (!user) {
-            throw ("user not found")
+            throw new ApiError(404, 'User not found', {user})
         }
 
         // check if the given password is correct for
         const isPasswordValid = user.matchPasswordHash(password)
         if (!isPasswordValid) {
-            throw ('Permission Denied, wrong password')
+            throw new ApiError(401, 'Permission Denied, wrong password')
         }
         // generate accessToken and refreshToken
         const {accessToken, refreshToken} = await generateAccessTokenAndRefreshToken(user)
@@ -95,24 +94,21 @@ const userLogin = async (req, res) => {
         // cookie response options
         const options = {
             // adding httpOnly FOR MORE SECURE STORING AND AVOIDING XSS ATTACK
-            httpOnly: true,
-            // adding secure TO SEND THE COOKIE THROUGH HTTPS ( SECURED HTTP )
+            httpOnly: true, // adding secure TO SEND THE COOKIE THROUGH HTTPS ( SECURED HTTP )
             secure: true
         }
 
         // sending the response
+
+        const apiResponse = new ApiResponse(202, 'User Authenticated', {
+            accessToken, refreshToken, loggedInUser
+        }, true)
         res.status(202)
             .cookie('access-token', accessToken, options)
             .cookie('refresh-token', refreshToken, options)
-            .json({
-                success: true, message: 'User Authenticated', data: {
-                    accessToken,
-                    refreshToken,
-                    loggedInUser
-                }
-            })
+            .json(apiResponse)
     } catch (e) {
-        sendResponse(false, e, 404, undefined, res)
+        res.status(e.statusCode).json(e)
     }
 }
 
@@ -123,34 +119,30 @@ const userLogout = async (req, res) => {
         } = req.body
         // verify if given userId valid
         if (!userId) {
-            throw ('User not found')
+            throw new ApiError(404, 'User not found')
         }
         // find the user and remove the accesstoken from the user
         const user = await Users.findByIdAndUpdate(userId, {
-                $set: {
-                    refreshToken: ''
-                }
-            }, {
-                new: true
+            $set: {
+                refreshToken: ''
             }
-        ).select('-passwordHash -refreshToken')
+        }, {
+            new: true
+        }).select('-passwordHash -refreshToken')
 
         // remove accesstoken from the cookies
         const options = {
             // protect from XSS attacks
-            httpOnly: true,
-            // user HTTPS
+            httpOnly: true, // user HTTPS
             secure: true
         }
+        const apiResponse = new ApiResponse(202, 'User Logged out', {user}, true)
         res.status(202)
             .clearCookie('access-token', options)
             .clearCookie('refresh-token', options)
-            .json({
-                success: true, message: 'User Logged out', data: {user}
-            })
-    } catch
-        (e) {
-        sendResponse(false, e, 404, undefined, res)
+            .json(apiResponse)
+    } catch (e) {
+        res.status(e.statusCode).json(e)
     }
 }
 
@@ -162,15 +154,13 @@ const removeUser = async (req, res) => {
         } = req.body
         const foundUser = await Users.findById(userId)
         if (!foundUser) {
-            throw ('User not found')
+            throw new ApiError(404, 'User not found')
         }
         foundUser.archive = true
-        res.json({
-            success: true, message: 'User removed successfuly'
-        }).status(202)
+        const apiResponse = new ApiResponse(202, 'User removed successfully', {})
+        res.json(apiResponse).status(202)
     } catch (e) {
-        console.log(e)
-        sendResponse(false, e, 404, undefined, res)
+        res.status(e.statusCode).json(e)
     }
 }
 
@@ -185,58 +175,56 @@ const updateUserData = async (req, res) => {
         // verifying if the type of data user wants to change is in the enum
         const typeIsInEnum = typeEnum.includes(type)
         if (!typeIsInEnum) {
-            throw (`${type} is invalid item to change`)
+            throw new ApiError(400, 'Type is invalid', {type})
         }
         const foundUser = await Users.findById(userId)
         if (!foundUser) {
-            throw ('User not found')
+            throw new ApiError(404, 'User not found')
         }
         switch (type) {
             case 'email':
                 const updatedEmail = foundUser.updateEmail(email)
                 if (!updatedEmail.success) {
-                    throw (updatedEmail.message)
+                    throw new ApiError(500, updatedEmail?.message || 'Error updating email')
                 }
-                console.log(foundUser)
-                sendResponse(true, 'email changed successfully', 202, undefined, res)
+                const apiResponse = new ApiResponse(202, 'Email updated successfully', {updatedEmail})
+                res.status(200).json(apiResponse)
                 break;
             case 'password':
-                const updatedPassword = await foundUser.updatePasswordHash(password)
+                const updatedPassword = await foundUser.updatePasswordHash(password);
                 if (!updatedPassword.success) {
-                    throw (updatedPassword.message)
+                    throw new ApiError(500, updatedPassword?.message || 'Error updating password');
                 }
-                console.log(foundUser)
-                sendResponse(true, 'password changed successfully', 202, undefined, res)
+                const passwordResponse = new ApiResponse(202, 'Password changed successfully', {updatedPassword});
+                res.status(200).json(passwordResponse);
                 break;
             case 'username':
-                const updatedUsername = foundUser.updateUsername(username)
+                const updatedUsername = foundUser.updateUsername(username);
                 if (!updatedUsername.success) {
-                    throw (updatedUsername.message)
+                    throw new ApiError(500, updatedUsername?.message || 'Error updating username');
                 }
-                console.log(foundUser)
-                sendResponse(true, 'Username changed successfully', 202, undefined, res)
-
+                const usernameResponse = new ApiResponse(202, 'Username updated successfully', {updatedUsername});
+                res.status(200).json(usernameResponse);
                 break;
             case 'profile-picture':
-                const updatedProfilePicture = foundUser.updateProfilePicture(profilePicture)
+                const updatedProfilePicture = foundUser.updateProfilePicture(profilePicture);
                 if (!updatedProfilePicture.success) {
-                    throw (updatedProfilePicture.message)
+                    throw new ApiError(500, updatedProfilePicture?.message || 'Error updating profile picture');
                 }
-                console.log(foundUser)
-                sendResponse(true, 'Profile picture changed successfully', 202, undefined, res)
-
+                const profilePictureResponse = new ApiResponse(202, 'Profile picture updated successfully', {updatedProfilePicture});
+                res.status(200).json(profilePictureResponse);
                 break;
             case 'display-name':
-                const updatedDisplayName = foundUser.updateDisplayName(displayName)
+                const updatedDisplayName = foundUser.updateDisplayName(displayName);
                 if (!updatedDisplayName.success) {
-                    throw (updatedDisplayName.message)
+                    throw new ApiError(500, updatedDisplayName?.message || 'Error updating display name');
                 }
-                console.log(foundUser)
-                sendResponse(true, 'display name changed successfully', 202, undefined, res)
+                const displayNameResponse = new ApiResponse(202, 'Display name updated successfully', {updatedDisplayName});
+                res.status(200).json(displayNameResponse);
                 break;
         }
     } catch (e) {
-        sendResponse(false, e, 404, undefined, res)
+        res.status(e.statusCode).json(e)
     }
 }
 
@@ -246,23 +234,22 @@ const getUserData = async (req, res) => {
         const {
             userId
         } = req.params
-        console.log('userId', userId)
         const foundUser = await Users.findById(userId)
         if (!foundUser) {
-            throw ('User not found')
+            throw new ApiError(404, 'User not found')
         }
         console.log(foundUser)
         const {
             username, email, displayName
         } = foundUser
         if ((username || email) && displayName) {
-            sendResponse(true, 'User data gottent successfully', 202, {username, email, displayName}, res)
+            const apiResponse = new ApiResponse(202, 'User data gottent successfully', {username, email, displayName})
+            res.status(200).json(apiResponse)
         } else {
-            throw (`DATA INVALID {  username ${username} email ${email} display name ${displayName}`)
+            throw new ApiError(404, 'Invalid Data', {username, email, displayName})
         }
     } catch (e) {
-        console.log(e);
-        sendResponse(false, e, 404, undefined, res)
+        res.status(e.statusCode).json(e)
     }
 }
 
@@ -273,25 +260,19 @@ const removeProfilePicture = async (req, res) => {
         } = req.body
         const foundUser = await Users.findById(userId)
         if (!foundUser) {
-            throw ('User not found')
+            throw new ApiError(404, 'User not found')
         }
         const removedPP = foundUser.updateProfilePicture(undefined)
         if (!removedPP.success) {
-            throw ('profile picture not removed error')
+            throw new ApiError(500, 'Error profile picture was not removed ', {removedPP})
         }
-        console.log(foundUser)
-        sendResponse(true, 'Profile Picture removed successfully', 202, undefined, res)
+        const apiResponse = new ApiResponse(202, 'Profile picture removed successfully')
+        res.status(200).json(apiResponse)
     } catch (e) {
-        sendResponse(false, e, 404, undefined, res)
+        res.status(e.statusCode).json(e)
     }
 }
 
 module.exports = {
-    registerNewUser,
-    userLogin,
-    removeUser,
-    updateUserData,
-    getUserData,
-    removeProfilePicture,
-    userLogout,
+    registerNewUser, userLogin, removeUser, updateUserData, getUserData, removeProfilePicture, userLogout,
 }

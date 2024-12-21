@@ -1,9 +1,10 @@
+// success, message, statusCode, data, res
 class ApiResponse {
     constructor(
         statusCode,
         message = 'Success',
         data,
-        success,
+        success = false,
     ) {
         this.statusCode = statusCode
         this.message = message
@@ -11,3 +12,5 @@ class ApiResponse {
         this.success = success
     }
 }
+
+module.exports = ApiResponse
