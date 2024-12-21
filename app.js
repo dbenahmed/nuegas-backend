@@ -12,7 +12,7 @@ const Tasks = require('./models/tasksModel')
 // ROUTES
 const usersRouter = require('./routes/usersRoute')
 const tasksRouter = require('./routes/tasksRoute')
-
+const projectsRouter = require('./routes/projectsRoute')
 
 const app = express();
 const port = 9990;
@@ -25,6 +25,7 @@ app.use(express.json());
 
 app.use('/users', usersRouter)
 app.use('/tasks', tasksRouter)
+app.use('/projects', projectsRouter)
 // TESTING ROUTE
 app.use("/", async (req, res) => {
     /* Projects.create({

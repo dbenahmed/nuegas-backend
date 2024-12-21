@@ -1,4 +1,4 @@
-const { Schema, model } = require("mongoose");
+const { Schema, model, Types } = require("mongoose");
 const { stringIsUndefined: stringIsUndefined, stringDoesNotContainSpecialCharacters: stringDoesNotContainSpecialCharacters } = require('../validators/stringValidators')
 const { arrayNotEmpty: arrayNotEmpty } = require('../validators/arrayValidators')
 const { dateIsADate: dateIsADate } = require('../validators/dateValidators')
@@ -30,7 +30,7 @@ const projectSchema = new Schema({
     },
     deadlineDate: { type: Date },
     createdAt: { type: Date, immutable: true, default: Date.now },
-    projectTasks: { type: [String], default: [] },
+    projectTasks: { type: [Types.ObjectId], default: [] },
     members: {
         type: [String],
         validate: [{

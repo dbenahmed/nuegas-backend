@@ -55,19 +55,20 @@ const userLogin = async (req, res) => {
         if (!searchUser.length === 0) { throw ('User Not Found') }
         const foundUser = searchUser[0]
         // check if the given password is correct for 
-        const authorize = bcrypt.compareSync(password, foundUser.passwordHash)
-        if (!authorize) { throw ('Permission Denied, wrong password') }
+        const match = bcrypt.compareSync(password, foundUser.passwordHash)
+        if (!match) { throw ('Permission Denied, wrong password') }
         // make the json web token
         const payload = {
             userId: foundUser._id.toString(),
         }
-        const generatedJwt = jwt.sign(payload, 'testkey')
+        const accessToken = jwt.sign(payload, process.env.TOKEN_SECRET)
         console.log(foundUser)
+        console.log(accessToken)
         res.json({
             success: true,
             message: 'User Authenticated',
             data: {
-                jwtoken: generatedJwt
+                accessToken: accessToken
             }
         }).status(202)
     }
