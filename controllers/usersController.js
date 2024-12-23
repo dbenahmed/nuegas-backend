@@ -52,9 +52,9 @@ const registerNewUser = async (req, res) => {
             throw new ApiError(500, 'User not created', {createdUser})
         }
         const apiResponse = new ApiResponse(202, 'User created successfully', {createdUser}, true)
-        res.json(apiResponse).statusCode(apiResponse.successCode)
+        res.json(apiResponse).status(apiResponse.successCode)
     } catch (e) {
-        res.json(e).statusCode(e.statusCode)
+        res.json(e).status(e.statusCode)
     }
 
 }
