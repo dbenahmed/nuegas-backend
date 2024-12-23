@@ -27,7 +27,7 @@ const verifyJWT = async function (req, res, next) {
         next()
     } catch (e) {
         if (!Number.isInteger(e.statusCode)) {
-            res.statusCode(500).json({
+            res.status(500).json({
                 success: false, message: `${e.statusCode} is not a number`
             })
         }
