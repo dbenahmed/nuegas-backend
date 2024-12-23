@@ -6,6 +6,7 @@ class ApiError extends Error {
         errors = [],
         stack = ""
     ) {
+        console.log({statusCode, message, data, errors});
         super(message)
         this.statusCode = statusCode
         this.data = null

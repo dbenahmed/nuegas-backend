@@ -68,7 +68,7 @@ app.listen(port, async () => {
             throw "uri unvalid";
         }
         await mongoose.connect(uri);
-        console.log("server connected");
+        console.log(`server connected http://localhost:${port}/`);
     } catch (e) {
         console.log(e);
     }
