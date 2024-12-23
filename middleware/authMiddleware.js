@@ -26,6 +26,11 @@ const verifyJWT = async function (req, res, next) {
         req.userId = user._id
         next()
     } catch (e) {
+        if (!Number.isInteger(e.statusCode)) {
+            res.statusCode(500).json({
+                success: false, message: `${e.statusCode} is not a number`
+            })
+        }
         res.statusCode(e.statusCode).json(e)
     }
 }

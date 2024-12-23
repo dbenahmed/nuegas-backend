@@ -27,15 +27,15 @@ router.route('/login').post(userLogin)
 router.route('/logout').post(verifyJWT, userLogout)
 
 // USER DELETE
-router.route('/:userId').delete(removeUser)
+router.route('/:userId').delete(verifyJWT, removeUser)
 
 // UPDATE USER NAME/DISPLAY NAME/EMAIL/...
-router.route('/update').patch(updateUserData)
+router.route('/update').patch(verifyJWT, updateUserData)
 
 // DELETE PROFILE PICTURE
-router.route('/profile-picture/remove').delete(removeProfilePicture)
+router.route('/profile-picture/remove').delete(verifyJWT, removeProfilePicture)
 
 // GET USER DATA
-router.route('/:userId').get(getUserData)
+router.route('/:userId').get(verifyJWT, getUserData)
 
 module.exports = router

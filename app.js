@@ -29,7 +29,6 @@ mongoose.set("debug", true);
 // MIDDLEWARES
 app.use(express.json());
 app.use(cookieParser())
-app.use(verifyJWT)
 
 // USING ROUTES
 app.use('/users', usersRouter)
