@@ -26,7 +26,7 @@ const verifyJWT = async function (req, res, next) {
         req.userId = user._id
         next()
     } catch (e) {
-        res.json(e).statusCode(e.statusCode)
+        res.statusCode(e.statusCode).json(e)
     }
 }
 

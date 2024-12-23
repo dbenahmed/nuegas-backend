@@ -33,7 +33,7 @@ const userSchema = new Schema({
             const regex = new RegExp(reg)
             const validFormat = regex.test(newUsername)
             if (!validFormat) {
-                return ({success: false, message: 'new usename has invalid format'})
+                return ({success: false, message: 'new username has invalid format'})
             }
             this.username = newUsername
             return {
@@ -47,7 +47,7 @@ const userSchema = new Schema({
             //const reg = /^(?!.*[\w\s@#$%^&*()-+=_]).+$/
             //const testReg = new RegExp(reg)
             //     const validFormat = testReg.test(newPassword)
-            //   if (!validFormat) { return { success: false, message: 'password has unvalid format' } }
+            //   if (!validFormat) { return { success: false, message: 'password has invalid format' } }
             /*const passwordHash = bcrypt.hashSync(newPassword, 10)
             console.log('pashash', passwordHash)
             this.passwordHash = passwordHash*/
@@ -62,7 +62,7 @@ const userSchema = new Schema({
             const regex = new RegExp(reg)
             const validFormat = regex.test(newDisplayName)
             if (!validFormat) {
-                return ({success: false, message: 'new usename has invalid format'})
+                return ({success: false, message: 'new username has invalid format'})
             }
             this.displayName = newDisplayName
             return {
@@ -105,7 +105,7 @@ userSchema.methods.matchPasswordHash = async function (password) {
 }
 
 // generate access token for jwt authentication
-userSchema.methods.generateAccessToken = function (accessToken) {
+userSchema.methods.generateAccessToken = function () {
     return jwt.sign({
         _id: this._id,
         email: this.email,
@@ -115,7 +115,7 @@ userSchema.methods.generateAccessToken = function (accessToken) {
         expiresIn: process.env.REFRESH_TOKEN_EXPIRY
     })
 }
-userSchema.methods.generateRefreshToken = function (refreshToken) {
+userSchema.methods.generateRefreshToken = function () {
     return jwt.sign({
         _id: this._id
     }, process.env.REFRESH_TOKEN_SECRET, {
