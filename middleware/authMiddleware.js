@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const Users = require('../models/usersModel.js')
 const ApiError = require('../utils/ApiError.js')
-const ApiResponse = require('../utils/ApiResponse.js')
+
 
 const verifyJWT = async function (req, res, next) {
     try {
@@ -25,13 +25,8 @@ const verifyJWT = async function (req, res, next) {
         req.user = user
         req.userId = user._id
         next()
-    } catch (e) {
-        if (!Number.isInteger(e.statusCode)) {
-            res.status(500).json({
-                success: false, message: `${e.statusCode} is not a number`
-            })
-        }
-        res.statusCode(e.statusCode).json(e)
+    } catch (err) {
+        next(err)
     }
 }
 

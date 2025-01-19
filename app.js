@@ -22,6 +22,7 @@ const projectsRouter = require('./routes/projectsRoute')
 
 // IMPORTING MIDDLEWARES
 const {verifyJWT} = require("./middleware/authMiddleware");
+const errorHandler = require("./middleware/errorHandler");
 
 // MONGOOSE DEBUGGING
 mongoose.set("debug", true);
@@ -59,6 +60,7 @@ app.use("/", async (req, res) => {
     res.send('done')
 });
 
+app.use(errorHandler)
 
 // SERVER LISTENING
 app.listen(port, async () => {

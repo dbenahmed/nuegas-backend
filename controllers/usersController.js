@@ -21,7 +21,7 @@ const generateAccessTokenAndRefreshToken = async function (user) {
 const registerNewUser = async (req, res) => {
     try {
         // CREATION OF THE USER
-        // verify the given data if it is usable 
+        // verify the given data if it is usable
         const {
             password, username, email, displayName
         } = req.body
@@ -42,7 +42,7 @@ const registerNewUser = async (req, res) => {
         if (userFound) {
             throw new ApiError(400, 'User already exists')
         }
-        // if not existed we make it 
+        // if not existed we make it
         const user = await Users.create({
             username, passwordHash: password, displayName: displayName, email: email,
         })
@@ -53,8 +53,8 @@ const registerNewUser = async (req, res) => {
         }
         const apiResponse = new ApiResponse(202, 'User created successfully', {createdUser}, true)
         res.json(apiResponse).status(apiResponse.successCode)
-    } catch (e) {
-        res.json(e).status(e.statusCode)
+    } catch (err) {
+        next(err)
     }
 
 }
@@ -107,8 +107,8 @@ const userLogin = async (req, res) => {
             .cookie('access-token', accessToken, options)
             .cookie('refresh-token', refreshToken, options)
             .json(apiResponse)
-    } catch (e) {
-        res.status(e.statusCode).json(e)
+    } catch (err) {
+        next(err)
     }
 }
 
@@ -141,8 +141,8 @@ const userLogout = async (req, res) => {
             .clearCookie('access-token', options)
             .clearCookie('refresh-token', options)
             .json(apiResponse)
-    } catch (e) {
-        res.status(e.statusCode).json(e)
+    } catch (err) {
+        next(err)
     }
 }
 
@@ -159,8 +159,8 @@ const removeUser = async (req, res) => {
         foundUser.archive = true
         const apiResponse = new ApiResponse(202, 'User removed successfully', {})
         res.json(apiResponse).status(202)
-    } catch (e) {
-        res.status(e.statusCode).json(e)
+    } catch (err) {
+        next(err)
     }
 }
 
@@ -223,8 +223,8 @@ const updateUserData = async (req, res) => {
                 res.status(200).json(displayNameResponse);
                 break;
         }
-    } catch (e) {
-        res.status(e.statusCode).json(e)
+    } catch (err) {
+        next(err)
     }
 }
 
@@ -248,8 +248,8 @@ const getUserData = async (req, res) => {
         } else {
             throw new ApiError(404, 'Invalid Data', {username, email, displayName})
         }
-    } catch (e) {
-        res.status(e.statusCode).json(e)
+    } catch (err) {
+        next(err)
     }
 }
 
@@ -268,8 +268,8 @@ const removeProfilePicture = async (req, res) => {
         }
         const apiResponse = new ApiResponse(202, 'Profile picture removed successfully')
         res.status(200).json(apiResponse)
-    } catch (e) {
-        res.status(e.statusCode).json(e)
+    } catch (err) {
+        next(err)
     }
 }
 
