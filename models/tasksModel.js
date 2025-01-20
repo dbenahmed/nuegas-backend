@@ -12,7 +12,7 @@ const taskSchema = new Schema({
     dueDate: { type: Date },
     deadlineDate: { type: Date },
     parentProject: {
-        type: Types.ObjectId, default: undefined
+        type: Types.ObjectId, default: null
     },
     priority: {
         type: String,

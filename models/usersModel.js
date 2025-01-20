@@ -10,7 +10,7 @@ const userSchema = new Schema({
         maxLength: 16,
         unique: true,
         trim: true,
-        match: [/^[a-zA-Z0-9]+$/, 'please une only letters and numbers and - ']
+        match: [/^[a-zA-Z0-9_-]+$/, 'please une only letters and numbers and - ']
     },
     passwordHash: {
         type: String,

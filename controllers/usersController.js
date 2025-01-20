@@ -1,9 +1,7 @@
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
-const {sendResponse} = require('./functions/sendResponse')
 const Users = require('../models/usersModel')
 const ApiResponse = require("../utils/ApiResponse");
-ApiError = require('../utils/ApiError')
+const ApiError = require("../utils/ApiError");
+const {validationResult} = require('express-validator');
 
 const generateAccessTokenAndRefreshToken = async function (user) {
     try {
@@ -13,21 +11,27 @@ const generateAccessTokenAndRefreshToken = async function (user) {
         user.refreshToken = refreshToken
         await user.save()
         return {accessToken, refreshToken}
-    } catch (e) {
-        throw (e)
+    } catch (err) {
+        next(err)
     }
 }
 
-const registerNewUser = async (req, res) => {
+// CREATION OF THE USER
+const registerNewUser = async (req, res, next) => {
     try {
-        // CREATION OF THE USER
+        // Validate given data types checking was successful
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            throw new ApiError(400,'Validation Error',[],errors.array())
+        }
         // verify the given data if it is usable
         const {
             password, username, email, displayName
         } = req.body
-
+        console.log(username)
         // verifying if some field is empty
-        if ([displayName, password, email, username].some((field) => field?.trim() === "")) {
+        const fields = [displayName, password, email, username]
+        if (fields.some((field) => field?.trim() === (""))) {
             throw new ApiError(400, 'All fields are required', {password, username, email, displayName})
         }
 
@@ -59,8 +63,13 @@ const registerNewUser = async (req, res) => {
 
 }
 
-const userLogin = async (req, res) => {
+const userLogin = async (req, res, next) => {
     try {
+        // Validate given data types checking was successful
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            throw new ApiError(400,'Validation Error',[],errors.array())
+        }
         // gather the data
         const {
             username, password, email, type // todo TO DO LATER
@@ -112,8 +121,13 @@ const userLogin = async (req, res) => {
     }
 }
 
-const userLogout = async (req, res) => {
+const userLogout = async (req, res, next) => {
     try {
+        // Validate given data types checking was successful
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            throw new ApiError(400,'Validation Error',[],errors.array())
+        }
         const {
             userId
         } = req.body
@@ -146,8 +160,13 @@ const userLogout = async (req, res) => {
     }
 }
 
-const removeUser = async (req, res) => {
+const removeUser = async (req, res, next) => {
     try {
+        // Validate given data types checking was successful
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            throw new ApiError(400,'Validation Error',[],errors.array())
+        }
         // Search for the use if found delete it if not found throw error
         const {
             userId,
@@ -164,8 +183,13 @@ const removeUser = async (req, res) => {
     }
 }
 
-const updateUserData = async (req, res) => {
+const updateUserData = async (req, res, next) => {
     try {
+        // Validate given data types checking was successful
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            throw new ApiError(400,'Validation Error',[],errors.array())
+        }
         // The available possible type of data user would change
         const typeEnum = ['email', 'password', 'username', 'display-name', 'profile-picture']
         // gathering data from the user
@@ -229,8 +253,13 @@ const updateUserData = async (req, res) => {
 }
 
 
-const getUserData = async (req, res) => {
+const getUserData = async (req, res, next) => {
     try {
+        // Validate given data types checking was successful
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            throw new ApiError(400,'Validation Error',[],errors.array())
+        }
         const {
             userId
         } = req.params
@@ -253,8 +282,13 @@ const getUserData = async (req, res) => {
     }
 }
 
-const removeProfilePicture = async (req, res) => {
+const removeProfilePicture = async (req, res, next) => {
     try {
+        // Validate given data types checking was successful
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            throw new ApiError(400,'Validation Error',[],errors.array())
+        }
         const {
             userId
         } = req.body
