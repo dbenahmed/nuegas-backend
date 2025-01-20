@@ -1,6 +1,7 @@
 const {sendResponse} = require('./functions/sendResponse')
 const Tasks = require('../models/tasksModel')
 const Users = require('../models/usersModel')
+const Projects = require('../models/projectsModel')
 const ApiResponse = require("../utils/ApiResponse");
 const ApiError = require("../utils/ApiError");
 const {validationResult} = require('express-validator')
@@ -15,11 +16,16 @@ const getAllProjectTasks = async (req, res, next) => {
         const {
             projectId
         } = req.params
+        // verify if given project id do exist
+        const projectExists = await Projects.exists({_id: projectId})
+        if (!projectExists) {
+            throw new ApiError(404, 'Project does not exist');
+        }
         const foundTasks = await Tasks.find({parentProject: projectId})
         if (!foundTasks) {
             throw new ApiError(404, 'Error while retrieving tasks')
         }
-        const apiResponse = new ApiResponse(202, 'Tasks found successfully.', {...foundTasks}, true)
+        const apiResponse = new ApiResponse(200, 'Tasks found successfully.', foundTasks, true)
         res.status(apiResponse.statusCode).json(apiResponse)
     } catch (err) {
         next(err)
@@ -36,26 +42,13 @@ const getSingleTask = async (req, res, next) => {
         }
         const {
             taskId,
-            name,
-            type
         } = req.params
-        const typeEnum = ['name', 'id']
-        // check if the search type is a valid type of search
-        const typeIsInEnum = typeEnum.includes(type)
-        if (!typeIsInEnum) {
-            throw new ApiError(404, `${type} is invalid item to search by`)
-        }
-        // search for the element based on the selected search type 
-        let foundTask
-        if (type === 'id') {
-            foundTask = await Tasks.findById(taskId)
-        } else if (type === 'name') {
-            foundTask = await Tasks.findOne({name: name})
-        }
+        // search for the element based on the selected search type
+        const foundTask = await Tasks.findById(taskId)
         if (!foundTask) {
             throw new ApiError(404, `Task with this id not found`)
         }
-        const apiResponse = new ApiResponse(202, 'Task found successfully.', {...foundTask}, true)
+        const apiResponse = new ApiResponse(200, 'Task found successfully.', foundTask, true)
         res.status(apiResponse.statusCode).json(apiResponse)
     } catch (err) {
         next(err)
@@ -78,8 +71,21 @@ const createNewTask = async (req, res, next) => {
             priority,
             status,
             assignees,
+            userId
         } = req.body
         // validate if the Assignees Id's ( users ) do exist in our users database
+        const userExists = await Users.findById(userId)
+        if (!userExists) {
+            throw new ApiError(404, `User Creating this task with this id not found`)
+        }
+
+        // todo verify if dueDate is before today or deadline date is before dueDate
+        /*const deadlineDateIsNotBeforeToday = (deadlineDate.getTime() > Date.now())
+        if (!deadlineDateIsNotBeforeToday) {
+            throw new ApiError(409,'Deadline date must be later than today')
+        }*/
+
+        // verify if assignees Id's exist
         const resolved = await Promise.all(assignees.map(async (assignee) => {
             const userFd = await Users.exists({_id: assignee})
             console.log('assignee', userFd)
@@ -89,7 +95,7 @@ const createNewTask = async (req, res, next) => {
         })).catch((err) => {
             throw (err)
         })
-        const task = new Tasks({
+        const task = Tasks.create({
             name,
             dueDate,
             deadlineDate,
@@ -97,6 +103,7 @@ const createNewTask = async (req, res, next) => {
             priority,
             status,
             assignees,
+            createdBy: userId
         })
         // todo: still task.save()
         const apiResponse = new ApiResponse(201, 'Tasks created successfully.', task, true)
@@ -113,7 +120,7 @@ const updateTask = async (req, res, next) => {
         if (!errors.isEmpty()) {
             throw new ApiError(400, 'Validation Error', [], errors.array())
         }
-        const {
+        /*const {
             taskId,
             name,
             dueDate,
@@ -122,35 +129,35 @@ const updateTask = async (req, res, next) => {
             priority,
             status,
             assignees,
-        } = req.body
-        // TRANSFORMING THE DATE INSIDE THE JSON FROM A STRING INTO A DATA VARIABLE
-        let dueDateDate
-        if (dueDate === "") {
-            dueDateDate = ""
-        } else {
-            dueDateDate = Date.parse(dueDate)
-        }
+        } = req.body*/
+        const {taskId, ...newUpdates} = req.body
 
-        // GET ONLY NULL OR NOT UNDEFINED ELEMENTS
+        /*// GET ONLY NULL OR NOT UNDEFINED ELEMENTS
         // NULL = THE USER CHANGE THE TASK PROPERTY INTO EMPTY
         // "" (EMPTY STRING) = THE USER DID NOT CHANGE THIS PROPERTY ( KEEP THE PREVIOUS VALUE )
         const filteredOnlyValidProperties = Object.fromEntries(Object.entries(
             {
                 name,
-                dueDate: dueDateDate,
+                dueDate,
                 deadlineDate,
                 parentProject,
                 priority,
                 status,
                 assignees,
             }
-        ).filter(([key, value], i) => value !== ""))
+        ).filter(([key, value], i) => (value !== "" && value !== undefined)))
         console.log('filtered props', filteredOnlyValidProperties)
         const foundTask = await Tasks.findByIdAndUpdate(taskId, {...filteredOnlyValidProperties})
+        */
+
+        // todo : what if the dueDate was set to a day before today or the deadline date was set to a date before today or before dueDate
+
+        const foundTask = await Tasks.findByIdAndUpdate(taskId, {...newUpdates})
         if (!foundTask) {
-            throw ('Task not found')
+            throw new ApiError(404, 'Task with this id not found')
         }
-        sendResponse(true, foundTask, 202, undefined, res)
+        const apiResponse = new ApiResponse(200, 'Task updated successfully.', foundTask, true)
+        res.status(apiResponse.statusCode).json(apiResponse)
     } catch (err) {
         next(err)
     }
@@ -165,15 +172,17 @@ const deleteTask = async (req, res, next) => {
         }
         const {
             taskId
-        } = req.body
+        } = req.params
         const foundTask = await Tasks.findById(taskId)
         if (!foundTask) {
-            throw ('task not found')
+            throw new ApiError(404, 'Task not found')
         }
         foundTask.archive = true
-        sendResponse(true, foundTask, 202, undefined, res)
-    } catch (e) {
-        sendResponse(false, e, 404, undefined, res)
+        await foundTask.save()
+        const apiRespomse = new ApiResponse(200, 'Task deleted successfully.', {}, true)
+        res.status(apiRespomse.statusCode).json(apiRespomse)
+    } catch (err) {
+        next(err)
     }
 }
 
@@ -192,15 +201,22 @@ const getUpcomingTasks = async (req, res, next) => {
             type,
             userId,
         } = req.params
-
-        const typeEnum = ['week', 'month', 'tommorow']
-        const typeIsInEnum = typeEnum.includes(type)
-        if (!typeIsInEnum) {
-            throw (`${type} is not a valid type of search`)
+        let startDate = new Date()
+        let endDate = new Date()
+        switch (type) {
+            case 'week':
+                // starting from today to the end of that week
+                endDate.setDate(startDate.getDate() + 6)
+                break;
+            case 'month':
+                // starting from today to the end of the month
+                endDate.setDate(startDate.getDate() + 31)
+                break;
+            case 'tomorrow':
+                endDate.setDate(startDate.getDate() + 1)
+                break;
         }
-        const startDate = new Date()
-        const endDate = new Date()
-        endDate.setDate(startDate.getDate() + 7)
+        console.log(endDate.toISOString())
         /* const foundTasks = await Tasks.find({
             $and: [
                 {
@@ -233,7 +249,8 @@ const getUpcomingTasks = async (req, res, next) => {
                 }
             ]
         })
-        sendResponse(true, 'Tasks Searching Successful', 202, foundTasks, res)
+        const apiResponse = new ApiResponse(200, 'Task found successfuly.', foundTasks, true)
+        res.status(apiResponse.statusCode).json(apiResponse)
     } catch (err) {
         next(err)
     }
@@ -251,9 +268,20 @@ const getTodayTasks = async (req, res, next) => {
         } = req.params
         const todayDate = new Date()
         const foundTasks = await Tasks.find({
-            dueDate: todayDate
+            $and: [
+                {
+                    $or: [
+                        {assignees: userId},
+                        {createdBy: userId}
+                    ]
+                },
+                {
+                    dueDate: todayDate
+                }
+            ],
         })
-        sendResponse(true, 'Tasks Searching Successful', 202, foundTasks, res)
+        const apiResponse = new ApiResponse(200, 'Task found successfuly.', foundTasks, true)
+        res.status(apiResponse.statusCode).json(apiResponse)
     } catch (err) {
         next(err)
     }
