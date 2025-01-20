@@ -21,7 +21,7 @@ function getNameValidator(isOptional = false) {
     const validatorChain = body('name')
         .trim()
         .isString().withMessage('Name must be a string')
-        .isLength({ min: 1, max: 16 }).withMessage('Name must be between 1 and 16 characters')
+        .isLength({ min: 1, max: 64 }).withMessage('Name must be between 1 and 64 characters')
         .matches(/^[a-z0-9 ]+$/i).withMessage('Name can only contain alphanumeric characters and spaces')
         .escape();
 

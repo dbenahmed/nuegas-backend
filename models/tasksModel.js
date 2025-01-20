@@ -5,7 +5,7 @@ const taskSchema = new Schema({
         type: String,
         required: true,
         trim: true,
-        maxLength: 16,
+        maxLength: 64,
         match: /^[A-Za-z0-9 ]+$/,
         minLength: 1,
     },
