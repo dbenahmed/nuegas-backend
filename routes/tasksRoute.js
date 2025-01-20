@@ -24,27 +24,30 @@ const {
     getParentProjectValidator,
     getAssigneesValidator,
 } = require("./tasksValidations");
+const {verifyJWT} = require("../middleware/authMiddleware");
 
 
 const router = express.Router()
 
 // __________________ ROUTES ______________________
 router.route('/project/:projectId/tasks').get(
+    verifyJWT,
     param('projectId')
         .trim()
         .isString().withMessage('Project id is not a string')
         .escape(),
     getAllProjectTasks)
 
-router.route('/:taskId').get(
+/*router.route('/:taskId').get(
     param('taskId')
         .trim()
         .notEmpty().withMessage('taskId must not be empty')
         .isString().withMessage('Task id is not a string')
         .escape(),
-    getSingleTask)
+    getSingleTask)*/
 
 router.route('/create').post(
+    verifyJWT,
     getUserIdValidator(false), // userId is required
     getNameValidator(false), // name is required
     getDueDateValidator(true), // dueDate is not required
@@ -57,6 +60,7 @@ router.route('/create').post(
 )
 
 router.route('/update').patch(
+    verifyJWT,
     // Required field: taskId
     body('taskId')
         .trim()
@@ -76,6 +80,7 @@ router.route('/update').patch(
 )
 
 router.route('/delete/:taskId').delete(
+    verifyJWT,
     // Required field: taskId
     param('taskId')
         .trim()
@@ -86,26 +91,18 @@ router.route('/delete/:taskId').delete(
 
 router.route('/:id/running').get(getRunningTasks)
 
-router.route('/user/:userId/upcoming/:type').get(
+router.route('/upcoming/:type').get(
+    verifyJWT,
     param('type')
         .trim()
         .notEmpty().withMessage('type param must not be empty')
         .isString().withMessage('type param must be a string')
         .isIn(['week','month','tomorrow'])
         .escape(),
-    param('userId')
-        .trim()
-        .notEmpty().withMessage('userId must not be empty')
-        .isString().withMessage('userId must be a string')
-        .escape(),
     getUpcomingTasks)
 
-router.route('/user/:userId/today').get(
-    param('userId')
-        .trim()
-        .notEmpty().withMessage('userId must not be empty')
-        .isString().withMessage('userId must be a string')
-        .escape(),
+router.route('/today').get(
+    verifyJWT,
     getTodayTasks)
 
 

@@ -16,12 +16,19 @@ const getAllProjectTasks = async (req, res, next) => {
         const {
             projectId
         } = req.params
+        const {user, userId} = req
         // verify if given project id do exist
-        const projectExists = await Projects.exists({_id: projectId})
-        if (!projectExists) {
+        const project = await Projects.findById(projectId)
+        if (!project) {
             throw new ApiError(404, 'Project does not exist');
         }
+
+        // verify if the user is one of the project members or created the project
+        if ((userId.toString() !== project.createdBy) && (project.members.findIndex(userId.toString()) === -1)) {
+            throw new ApiError(404, 'User is not authenticated');
+        }
         const foundTasks = await Tasks.find({parentProject: projectId})
+        console.log('fd', foundTasks)
         if (!foundTasks) {
             throw new ApiError(404, 'Error while retrieving tasks')
         }
@@ -120,43 +127,21 @@ const updateTask = async (req, res, next) => {
         if (!errors.isEmpty()) {
             throw new ApiError(400, 'Validation Error', [], errors.array())
         }
-        /*const {
-            taskId,
-            name,
-            dueDate,
-            deadlineDate,
-            parentProject,
-            priority,
-            status,
-            assignees,
-        } = req.body*/
         const {taskId, ...newUpdates} = req.body
-
-        /*// GET ONLY NULL OR NOT UNDEFINED ELEMENTS
-        // NULL = THE USER CHANGE THE TASK PROPERTY INTO EMPTY
-        // "" (EMPTY STRING) = THE USER DID NOT CHANGE THIS PROPERTY ( KEEP THE PREVIOUS VALUE )
-        const filteredOnlyValidProperties = Object.fromEntries(Object.entries(
-            {
-                name,
-                dueDate,
-                deadlineDate,
-                parentProject,
-                priority,
-                status,
-                assignees,
-            }
-        ).filter(([key, value], i) => (value !== "" && value !== undefined)))
-        console.log('filtered props', filteredOnlyValidProperties)
-        const foundTask = await Tasks.findByIdAndUpdate(taskId, {...filteredOnlyValidProperties})
-        */
-
+        const userId = req.userId.toString()
         // todo : what if the dueDate was set to a day before today or the deadline date was set to a date before today or before dueDate
-
-        const foundTask = await Tasks.findByIdAndUpdate(taskId, {...newUpdates})
+        const foundTask = await Tasks.findById(taskId)
         if (!foundTask) {
             throw new ApiError(404, 'Task with this id not found')
         }
-        const apiResponse = new ApiResponse(200, 'Task updated successfully.', foundTask, true)
+        // check if user is authorized ( either creator / assignee / project owner )
+        const parentProjectOwner = await Projects.findById(foundTask.parentProject).select('createdBy')
+        if ((foundTask.createdBy.toString() !== userId) && (foundTask.assignees.findIndex((v) => v.toString() === userId) === -1) && (parentProjectOwner !== userId)) {
+            throw new ApiError(404, 'Not Authorized')
+        }
+
+        const updatedTask = await Tasks.findByIdAndUpdate(taskId, {...newUpdates})
+        const apiResponse = new ApiResponse(200, 'Task updated successfully.', {}, true)
         res.status(apiResponse.statusCode).json(apiResponse)
     } catch (err) {
         next(err)
@@ -173,10 +158,22 @@ const deleteTask = async (req, res, next) => {
         const {
             taskId
         } = req.params
+        const userId = req.userId.toString()
+
         const foundTask = await Tasks.findById(taskId)
         if (!foundTask) {
             throw new ApiError(404, 'Task not found')
         }
+
+        // check if user is authorized ( either creator / assignee / project owner )
+        // either creator of task
+        // or owner of project
+        // if he is an assignee he is not authorized
+        const parentProjectOwner = await Projects.findById(foundTask.parentProject).select('createdBy')
+        if ((foundTask.createdBy.toString() !== userId) && (parentProjectOwner !== userId)) {
+            throw new ApiError(404, 'Not Authorized')
+        }
+
         foundTask.archive = true
         await foundTask.save()
         const apiRespomse = new ApiResponse(200, 'Task deleted successfully.', {}, true)
@@ -199,9 +196,11 @@ const getUpcomingTasks = async (req, res, next) => {
         }
         const {
             type,
-            userId,
         } = req.params
+        const userId = req.userId.toString()
+
         let startDate = new Date()
+
         let endDate = new Date()
         switch (type) {
             case 'week':
@@ -263,9 +262,9 @@ const getTodayTasks = async (req, res, next) => {
         if (!errors.isEmpty()) {
             throw new ApiError(400, 'Validation Error', [], errors.array())
         }
-        const {
-            userId,
-        } = req.params
+
+        const userId = req.userId.toString()
+        console.log('UID',userId)
         const todayDate = new Date()
         const foundTasks = await Tasks.find({
             $and: [

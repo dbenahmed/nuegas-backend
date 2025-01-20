@@ -22,8 +22,8 @@ const verifyJWT = async function (req, res, next) {
             throw new ApiError(401, 'Invalid Token User not found')
         }
         // if user do exist
-        req.body.user = user
-        req.body.userId = user._id
+        req.user = user
+        req.userId = user._id
         next()
     } catch (err) {
         next(err)
