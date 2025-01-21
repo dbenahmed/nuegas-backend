@@ -1,5 +1,5 @@
-const express = require('express')
 const {body, param} = require('express-validator')
+const {verifyJWT} = require("../middleware/authMiddleware");
 
 // importing controllers
 const {
@@ -24,9 +24,9 @@ const {
     getParentProjectValidator,
     getAssigneesValidator,
 } = require("./tasksValidations");
-const {verifyJWT} = require("../middleware/authMiddleware");
 
 
+const express = require('express')
 const router = express.Router()
 
 // __________________ ROUTES ______________________
@@ -35,8 +35,10 @@ router.route('/project/:projectId/tasks').get(
     param('projectId')
         .trim()
         .isString().withMessage('Project id is not a string')
+        .notEmpty().withMessage('each member must not be empty')
         .escape(),
-    getAllProjectTasks)
+    getAllProjectTasks
+)
 
 /*router.route('/:taskId').get(
     param('taskId')
@@ -97,7 +99,7 @@ router.route('/upcoming/:type').get(
         .trim()
         .notEmpty().withMessage('type param must not be empty')
         .isString().withMessage('type param must be a string')
-        .isIn(['week','month','tomorrow'])
+        .isIn(['week', 'month', 'tomorrow'])
         .escape(),
     getUpcomingTasks)
 

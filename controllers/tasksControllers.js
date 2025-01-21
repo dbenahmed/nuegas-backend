@@ -85,7 +85,7 @@ const createNewTask = async (req, res, next) => {
         if (!userExists) {
             throw new ApiError(404, `User Creating this task with this id not found`)
         }
-
+        // todo : creating a project with a parent project should also add the project id to the parentProject Tasks array
         // todo verify if dueDate is before today or deadline date is before dueDate
         /*const deadlineDateIsNotBeforeToday = (deadlineDate.getTime() > Date.now())
         if (!deadlineDateIsNotBeforeToday) {
@@ -139,7 +139,7 @@ const updateTask = async (req, res, next) => {
         if ((foundTask.createdBy.toString() !== userId) && (foundTask.assignees.findIndex((v) => v.toString() === userId) === -1) && (parentProjectOwner !== userId)) {
             throw new ApiError(404, 'Not Authorized')
         }
-
+        // todo : updating the parentProject parameter should also add the project id to the parent project & remove previous parent project from the previous parent array
         const updatedTask = await Tasks.findByIdAndUpdate(taskId, {...newUpdates})
         const apiResponse = new ApiResponse(200, 'Task updated successfully.', {}, true)
         res.status(apiResponse.statusCode).json(apiResponse)
@@ -173,7 +173,7 @@ const deleteTask = async (req, res, next) => {
         if ((foundTask.createdBy.toString() !== userId) && (parentProjectOwner !== userId)) {
             throw new ApiError(404, 'Not Authorized')
         }
-
+        // todo : removing task should also remove it from parent project Tasks array
         foundTask.archive = true
         await foundTask.save()
         const apiRespomse = new ApiResponse(200, 'Task deleted successfully.', {}, true)
