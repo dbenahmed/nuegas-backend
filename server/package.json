@@ -20,7 +20,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js"
+    "start": "../node_modules/.bin/nodemon app.js",
+    "docker:compose": "docker compose -p nuegas up"
   },
   "keywords": [],
   "author": "",

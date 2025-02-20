@@ -1,0 +1,17 @@
+
+services:
+  postgres:
+    image: postgres
+    container_name: nuegas-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "lenovo"
+      POSTGRES_DB: "nuegas"
+    ports:
+      - "5431:5432"
+    volumes:
+      - data:/var/lib/postgresql/data
+
+volumes:
+  data:
